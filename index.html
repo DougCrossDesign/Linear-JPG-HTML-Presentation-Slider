@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name = "format-detection" content = "telephone=no">
+<title>Linear JPG HTML Presentation</title>
+<link rel="stylesheet" type="text/css" href="css/style.css" />
+<style>
+	#wrapper, #content {
+		height: 768px;
+		width: 1024px;
+	}
+</style>
+<!-- Veeva scripts -->
+<script type="text/javascript" src="js/veevaquery.js"></script>
+<script type="text/javascript" src="js/veeva-library-4.0.js"></script>
+<script type="text/javascript" src="js/clmTracker.js"></script>
+<!-------->
+<script type="text/javascript" src="js/iscroll.js"></script>
+<script type="text/javascript">
+
+var maxpages=31; //max number of slides
+
+var filepath = "images/Slide"; //the path to slide jpgs, including image name prefix before slide number
+var leadingzeros = true; //true = add leading zeros before slide number ('Slide001'), false = no leading zeros, ('Slide1')
+var slidew;// slide width, can set here or will default after page load to size of content window
+var slideh;// slide height, can set here or will default after page load to size of content window
+
+
+var myScroll;// content window slide scroll
+
+var lastpage=-1;
+var checknum=0;
+var bdivs=[4,7,10,11,12,13,14,15,16,17,18];
+var opicts=[26,27,28,29,30,31];
+
+function init() {
+	slidew = slidew || document.getElementById('content').offsetWidth;
+	slideh = slideh || document.getElementById('content').offsetHeight;
+	var totalw=maxpages*slidew+1
+	document.getElementById('scroll-content').setAttribute('style','display:block; width:'+totalw+'px');
+	document.getElementById('scroll-content').style.width=totalw+'px';
+	for (var i=1; i<=maxpages; i++){
+		var div = document.createElement("div");
+		div.id = "slide"+i;
+		var num=formatnum(i);
+		div.style.width=slidew+'px';
+		div.style.height=slideh+'px';
+		div.style.backgroundImage= 'url('+filepath+num+'.jpg)';
+		div.style.backgroundSize = "contain";
+		document.getElementById('scroll-content').appendChild(div);
+	}
+	var blen=bdivs.length;
+	for (var i=0; i<blen; i++){
+		var sl=bdivs[i];
+		var num=formatnum(sl);
+		var myslide=document.querySelector('#slide'+sl);
+		getloadtext(myslide, filepath+num+".html");
+	}
+	var olen=opicts.length
+	for (var i=0; i<olen; i++){
+		var num=opicts[i];
+		var img = document.createElement("img");
+		img.id = "o"+num;
+		img.src = filepath+num+'.jpg';
+		img.style.width = slidew+'px';
+		img.style.height = slideh+'px';
+		document.querySelector('#overlay').appendChild(img);
+	}
+
+
+	setTimeout(function(){
+		myScroll = new IScroll('#content',{
+			scrollX: true,
+			scrollY: false,
+			momentum: false,
+			snapThreshold: 0.1, /*0.334,*/
+			bounce:false,
+			snap: true,
+			tap: true
+			});
+
+
+		myScroll.on('beforeScrollStart',function(){
+			var cpage=this.currentPage.pageX;
+			//checkpageswipe(cpage);
+			//console.log('myscroll current is '+this.currentPage.pageX);
+		});
+	},500);
+}
+
+
+	document.addEventListener('DOMContentLoaded', init, false);
+
+	document.ontouchmove = function(event){
+   		event.preventDefault();
+	};
+
+
+
+
+function checkactivate(){
+	checknum++;
+	if (checknum>=bdivs.length) activatebuttons();
+}
+
+function activatebuttons(){
+	var gobtns = document.querySelectorAll('.gobtn');
+	[].forEach.call(gobtns, function(gobtn) {
+		gobtn.addEventListener('tap', function(e) {e.preventDefault(); golink(gobtn);}, false);
+	});
+	var lastbtns = document.querySelectorAll('.lastbtn');
+	[].forEach.call(lastbtns, function(lastbtn) {
+		lastbtn.addEventListener('tap', function(e) {e.preventDefault(); golast();}, false);
+	});
+	var obtns = document.querySelectorAll('.obtn');
+	[].forEach.call(obtns, function(obtn) {
+		obtn.addEventListener('tap', function(e) {e.preventDefault(); goOver(obtn);}, false);
+	});
+	document.querySelector('#overlay').addEventListener('mousedown', function(e) {e.preventDefault(); hideoverlay();}, false);
+	document.querySelector('#overlay').addEventListener('touchstart', function(e) {e.preventDefault(); hideoverlay();}, false);
+}
+
+function golink(el){
+	lastpage=myScroll.currentPage.pageX;
+	var num=parseInt(el.getAttribute('slink'))-1;
+	myScroll.goToPage(num, 0, 0);
+}
+
+function golast(){
+	if (lastpage<0) lastpage=myScroll.currentPage.pageX;
+	myScroll.goToPage(lastpage, 0, 0);
+}
+
+function goOver(el){
+	var num=parseInt(el.getAttribute('slink'));
+	var oimgs=document.querySelectorAll('#overlay img');
+	[].forEach.call(oimgs, function(oimg) {
+		removeClass(oimg, 'active');
+	});
+	addClass(document.querySelector("#o"+num),'active');
+	addClass(document.querySelector("#overlay"),'show');
+}
+
+function hasClass(el, className) {
+  if (el.classList)
+    return el.classList.contains(className)
+  else
+    return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'))
+}
+
+function addClass(el, className) {
+  if (el.classList)
+    el.classList.add(className)
+  else if (!hasClass(el, className)) el.className += " " + className
+}
+
+function removeClass(el, className) {
+  if (el.classList)
+    el.classList.remove(className)
+  else if (hasClass(el, className)) {
+    var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
+    el.className=el.className.replace(reg, ' ')
+  }
+}
+
+
+function formatnum(num){
+	var numstr=num+'';
+	if(leadingzeros){
+		var len=1+Math.floor(Math.log10(maxpages));
+		while (numstr.length<len) numstr='0'+numstr;
+	}
+	return numstr;
+}
+
+function getloadtext(el, file){
+	var xhr= new XMLHttpRequest();
+	xhr.addEventListener("load", function(){
+		el.innerHTML = this.responseText;
+		checkactivate();
+	});
+	xhr.open('GET', file, true);
+	xhr.onreadystatechange= function() {
+    	if (this.readyState!==4) return;
+    	if (this.status!==200) return; // or whatever error handling you want
+    	//el.innerHTML =  this.responseText;
+	};
+	xhr.send();
+}
+
+//
+function hideoverlay(){
+	removeClass(document.querySelector("#overlay"),'show');
+}
+
+
+
+
+</script>
+</head>
+<body>
+	<div id="wrapper">
+    	<div id='content'>
+			<div id="scroll-content">
+    			<!--<img src="images/Slide01.jpg" width="1024" height="768">-->
+        	</div>
+        </div>
+        <div id='overlay'><img src="images/Slide25.jpg" width="1024" height="768"></div>
+        <!--content above, drawer below-->
+
+
+	</div><!--end wrapper-->
+</body>
+</html>

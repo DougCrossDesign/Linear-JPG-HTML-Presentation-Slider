@@ -1,0 +1,7 @@
+Dev Notes V.0
+
+Overview:
+Generalized framework for PPT conversions that utilizes mixture JPG images and HTML files to create slider presentation.
+
+			
+			
